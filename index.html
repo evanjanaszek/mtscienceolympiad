@@ -3,6 +3,8 @@
 <head>
     <title>Team Experience Survey Portal</title>
 
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,6 +16,11 @@
             padding: 12px 25px;
             font-size: 16px;
             cursor: pointer;
+            margin: 10px;
+        }
+
+        #profile {
+            display: none;
         }
     </style>
 
@@ -23,11 +30,96 @@
 
 <h1>Team Experience Survey</h1>
 
-<p>Login to view your Survey ID.</p>
+<div id="login">
+    <p>Please log in to view your Survey ID.</p>
+    <button onclick="login()">Login</button>
+</div>
 
-<button>
-    Login
-</button>
+
+<div id="profile">
+
+    <h2>Welcome!</h2>
+
+    <p>Your Survey ID:</p>
+
+    <h2 id="surveyID"></h2>
+
+    <button onclick="takeSurvey()">
+        Take Survey
+    </button>
+
+</div>
+
+
+<script>
+
+let auth0Client;
+
+
+async function setupAuth0() {
+
+    auth0Client = await createAuth0Client({
+
+        domain: "mtscienceolympiad.us.auth0.com",
+
+        clientId: "hXhgBXIi9VbPGeJQ968X3EO31SWPfly1",
+
+        authorizationParams: {
+
+            redirect_uri: window.location.href
+
+        }
+
+    });
+
+
+    if (window.location.search.includes("code=")) {
+
+        await auth0Client.handleRedirectCallback();
+
+        window.history.replaceState({}, document.title, "/");
+
+    }
+
+
+    if (await auth0Client.isAuthenticated()) {
+
+        document.getElementById("login").style.display = "none";
+
+        document.getElementById("profile").style.display = "block";
+
+
+        const user = await auth0Client.getUser();
+
+
+        document.getElementById("surveyID").innerHTML =
+            user.email;
+
+    }
+
+}
+
+
+async function login(){
+
+    await auth0Client.loginWithRedirect();
+
+}
+
+
+function takeSurvey(){
+
+    window.location.href =
+    "https://www.mtwp.net/";
+
+}
+
+
+setupAuth0();
+
+
+</script>
+
 
 </body>
 </html>
