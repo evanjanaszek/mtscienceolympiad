@@ -4,14 +4,14 @@
 <head>
 
 <title>
-Team Engagement Survey
+Team Engagement Survey Portal
 </title>
 
 
-<script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js"></script>
-
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+<script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js"></script>
 
 
 <style>
@@ -29,6 +29,7 @@ margin:0;
 }
 
 
+
 .card{
 
 background:white;
@@ -41,12 +42,31 @@ text-align:center;
 }
 
 
+
 .logo{
 
 width:140px;
 margin-bottom:15px;
 
 }
+
+
+
+.loadingLogo{
+
+width:220px;
+margin-bottom:20px;
+
+}
+
+
+
+h2{
+
+color:#1f3a5f;
+
+}
+
 
 
 button{
@@ -60,9 +80,11 @@ border:none;
 border-radius:8px;
 font-size:16px;
 font-weight:600;
+font-family:'Poppins';
 cursor:pointer;
 
 }
+
 
 
 button:hover{
@@ -72,11 +94,50 @@ background:#162b45;
 }
 
 
+
 .hidden{
 
 display:none;
 
 }
+
+
+
+.loading{
+
+color:#1f3a5f;
+font-weight:600;
+
+}
+
+
+
+.loadingTitle{
+
+font-size:24px;
+font-weight:600;
+
+}
+
+
+
+.loadingText{
+
+font-size:16px;
+color:#555;
+
+}
+
+
+
+.mainTitle{
+
+font-size:18px;
+color:#1f3a5f;
+margin-top:-10px;
+
+}
+
 
 
 .info{
@@ -88,22 +149,61 @@ margin-top:20px;
 }
 
 
+
 .surveyIDDisplay{
 
 font-size:30px;
 font-weight:700;
 color:#1f3a5f;
-margin:20px;
+margin:20px 0;
 
 }
 
 
-.loading{
+
+.statusActive{
+
+color:green;
+font-weight:700;
+
+}
+
+
+
+.statusClosed{
+
+color:red;
+font-weight:700;
+
+}
+
+
+
+.statusBefore{
 
 color:#1f3a5f;
-font-weight:600;
+font-weight:700;
 
 }
+
+
+
+.statusConstruction{
+
+color:#1f3a5f;
+font-weight:700;
+
+}
+
+
+
+.statusUnavailable{
+
+color:#555;
+font-weight:700;
+
+}
+
 
 
 .footerTime{
@@ -126,21 +226,35 @@ color:#777;
 <div class="card">
 
 
-<div id="loading">
+<!-- LOADING -->
 
-<img class="logo" src="https://i.imgur.com/U80EXGS.png">
+<div id="loadingPage">
 
-<h2>
+
+<img class="loadingLogo" src="https://i.imgur.com/U80EXGS.png">
+
+
+<h2 class="loadingTitle">
+
 Team Engagement Survey
+
 </h2>
 
-<p class="loading">
+
+<p class="loadingText">
+
 Loading...
+
 </p>
+
 
 </div>
 
 
+
+
+
+<!-- LOGIN PAGE -->
 
 
 <div id="loginPage" class="hidden">
@@ -150,13 +264,20 @@ Loading...
 
 
 <h2>
+
 Manheim Township Science Olympiad
+
 </h2>
 
 
-<p>
-Please login to find your Survey ID.
+<p class="mainTitle">
+
+Team Engagement Survey
+
 </p>
+
+
+<div id="statusLogin"></div>
 
 
 <button onclick="login()">
@@ -172,6 +293,9 @@ Login
 
 
 
+<!-- MAIN PAGE -->
+
+
 <div id="home" class="hidden">
 
 
@@ -179,8 +303,22 @@ Login
 
 
 <h2>
-Team Engagement Survey
+
+Manheim Township Science Olympiad
+
 </h2>
+
+
+<p class="mainTitle">
+
+Team Engagement Survey
+
+</p>
+
+
+
+<div id="surveyStatus"></div>
+
 
 
 <h3 id="welcome"></h3>
@@ -191,19 +329,26 @@ Team Engagement Survey
 
 
 
+
 <div class="info">
 
+
 <b>Name:</b>
+
 <span id="name"></span>
+
 <br>
 
 
 <b>Grade:</b>
+
 <span id="grade"></span>
+
 <br>
 
 
 <b>Building:</b>
+
 <span id="building"></span>
 
 
@@ -211,11 +356,12 @@ Team Engagement Survey
 
 
 
-<button onclick="takeSurvey()">
+<button id="surveyButton" onclick="takeSurvey()">
 
 Take Survey
 
 </button>
+
 
 
 <button onclick="logout()">
@@ -225,7 +371,27 @@ Logout
 </button>
 
 
+
 </div>
+
+
+
+
+
+<!-- STATUS ONLY PAGE -->
+
+
+<div id="statusPage" class="hidden">
+
+
+<img class="logo" src="https://i.imgur.com/U80EXGS.png">
+
+
+<div id="statusMessage"></div>
+
+
+</div>
+
 
 
 
@@ -235,93 +401,177 @@ Logout
 
 
 </div>
-
-
-
-
 <script>
+
+
+// =================================================
+// AUTH0 SETTINGS
+// =================================================
+
+const AUTH0_DOMAIN = "mtscienceolympiad.us.auth0.com";
+
+const AUTH0_CLIENT_ID = "hXhgBXIi9VbPGeJQ968X3EO31SWPfly1";
+
+
+
+// =================================================
+// SURVEY SETTINGS
+// CHANGE ONLY THIS SECTION
+// =================================================
+
+
+// Options:
+// "Active"
+// "Pre-Survey"
+// "Closed"
+// "Construction"
+// "Unavailable"
+
+
+const surveySettings = {
+
+
+    status: "Active",
+
+
+    openDate: "August 25, 2026",
+
+
+    closeDate: "September 15, 2026"
+
+
+};
+
+
+
+// =================================================
+// VARIABLES
+// =================================================
 
 
 let auth0Client;
 
 
 
-async function start(){
+// =================================================
+// START APP
+// =================================================
+
+
+async function startApp(){
 
 
 
 auth0Client = await createAuth0Client({
 
-domain:"mtscienceolympiad.us.auth0.com",
 
-clientId:"hXhgBXIi9VbPGeJQ968X3EO31SWPfly1",
+domain: AUTH0_DOMAIN,
+
+
+clientId: AUTH0_CLIENT_ID,
+
 
 authorizationParams:{
 
-redirect_uri:window.location.href
+
+redirect_uri: window.location.href
+
 
 }
 
+
 });
+
+
 
 
 
 if(window.location.search.includes("code=")){
 
 
+
 await auth0Client.handleRedirectCallback();
 
 
-window.history.replaceState({},document.title,"/");
+window.history.replaceState({}, document.title, "/");
+
 
 
 }
 
 
 
-let loggedIn =
-await auth0Client.isAuthenticated();
+
+let loggedIn = await auth0Client.isAuthenticated();
 
 
 
-document.getElementById("loading").className="hidden";
+
+document.getElementById("loadingPage").className="hidden";
+
 
 
 
 if(loggedIn){
 
+
+
 loadUser();
 
+
+
 }
+
 
 else{
 
+
+
 document.getElementById("loginPage").className="";
 
+showLoginStatus();
+
+
 }
 
 
 
+
 }
 
+
+
+
+// =================================================
+// LOGIN
+// =================================================
 
 
 
 async function login(){
 
 
+
 await auth0Client.loginWithRedirect();
+
 
 
 }
 
 
 
+
+// =================================================
+// LOAD USER
+// =================================================
+
+
+
 async function loadUser(){
 
 
-let user =
-await auth0Client.getUser();
+
+let user = await auth0Client.getUser();
 
 
 
@@ -329,30 +579,53 @@ document.getElementById("home").className="";
 
 
 
-document.getElementById("welcome").innerHTML=
-"Welcome, "+user["https://mtscienceolympiad.com/firstName"]+"!";
+document.getElementById("welcome").innerHTML =
+
+"Welcome, " +
+
+(user["https://mtscienceolympiad.com/firstName"] || user.name)
+
++ "!";
 
 
 
-document.getElementById("surveyID").innerHTML=
+
+document.getElementById("surveyID").innerHTML =
+
 user["https://mtscienceolympiad.com/surveyID"];
 
 
 
-document.getElementById("name").innerHTML=
-user["https://mtscienceolympiad.com/firstName"]+
-" "+
-user["https://mtscienceolympiad.com/lastName"];
+document.getElementById("name").innerHTML =
+
+(user["https://mtscienceolympiad.com/firstName"] || "")
+
++
+
+" "
+
++
+
+(user["https://mtscienceolympiad.com/lastName"] || "");
 
 
 
-document.getElementById("grade").innerHTML=
-user["https://mtscienceolympiad.com/grade"];
+
+document.getElementById("grade").innerHTML =
+
+user["https://mtscienceolympiad.com/grade"] || "";
 
 
 
-document.getElementById("building").innerHTML=
-user["https://mtscienceolympiad.com/building"];
+
+document.getElementById("building").innerHTML =
+
+user["https://mtscienceolympiad.com/building"] || "";
+
+
+
+
+showSurveyStatus();
 
 
 
@@ -360,74 +633,362 @@ user["https://mtscienceolympiad.com/building"];
 
 
 
+
+
+
+// =================================================
+// STATUS SYSTEM
+// =================================================
+
+
+
+function showSurveyStatus(){
+
+
+
+let box = document.getElementById("surveyStatus");
+
+let button = document.getElementById("surveyButton");
+
+
+
+if(surveySettings.status=="Active"){
+
+
+
+box.innerHTML =
+
+"<p class='statusActive'>Survey is currently open.</p>" +
+
+"<p>Survey closes on: "
+
++
+
+surveySettings.closeDate
+
++
+
+"</p>";
+
+
+
+button.style.display="block";
+
+
+
+}
+
+
+
+
+else if(surveySettings.status=="Pre-Survey"){
+
+
+
+box.innerHTML =
+
+"<p class='statusBefore'>The survey is not yet active.</p>" +
+
+"<p>The survey opens on: "
+
++
+
+surveySettings.openDate
+
++
+
+"</p>";
+
+
+
+button.style.display="none";
+
+
+
+}
+
+
+
+
+else if(surveySettings.status=="Closed"){
+
+
+
+box.innerHTML =
+
+"<p class='statusClosed'>Survey Closed</p>" +
+
+"<p>All surveys have been completed.</p>";
+
+
+
+button.style.display="none";
+
+
+
+}
+
+
+
+
+else if(surveySettings.status=="Construction"){
+
+
+
+box.innerHTML =
+
+"<p class='statusConstruction'>🚧</p>" +
+
+"<p class='statusConstruction'>This site is currently under construction.</p>";
+
+
+
+button.style.display="none";
+
+
+
+}
+
+
+
+
+else if(surveySettings.status=="Unavailable"){
+
+
+
+box.innerHTML =
+
+"<p class='statusUnavailable'>⚠️</p>" +
+
+"<p class='statusUnavailable'>This survey page is currently unavailable.</p>";
+
+
+
+button.style.display="none";
+
+
+
+}
+
+
+
+
+}
+
+
+
+
+
+
+function showLoginStatus(){
+
+
+
+let box=document.getElementById("statusLogin");
+
+
+
+if(surveySettings.status=="Pre-Survey"){
+
+
+
+box.innerHTML=
+
+"<p class='statusBefore'>Survey opens on: "
+
++
+
+surveySettings.openDate
+
++
+
+"</p>";
+
+
+
+}
+
+
+
+else if(surveySettings.status=="Closed"){
+
+
+
+box.innerHTML=
+
+"<p class='statusClosed'>Survey Closed</p>";
+
+
+
+}
+
+
+
+else if(surveySettings.status=="Construction"){
+
+
+
+box.innerHTML=
+
+"<p class='statusConstruction'>Site Under Construction</p>";
+
+
+
+}
+
+
+
+else if(surveySettings.status=="Unavailable"){
+
+
+
+box.innerHTML=
+
+"<p class='statusUnavailable'>Unavailable</p>";
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+  // =================================================
+// TAKE SURVEY
+// =================================================
+
+
 function takeSurvey(){
+
+
+let id = document.getElementById("surveyID").innerHTML;
+
 
 
 window.open(
 
-"mtwp.net?SurveyID="+
-document.getElementById("surveyID").innerHTML,
+"YOUR_QUALTRICS_LINK?SurveyID=" + id,
 
 "_blank"
 
 );
 
 
+
 }
 
 
+
+
+
+
+// =================================================
+// LOGOUT
+// =================================================
 
 
 async function logout(){
 
 
+
 await auth0Client.logout({
+
 
 logoutParams:{
 
-returnTo:window.location.href
+
+returnTo: window.location.href
+
 
 }
+
 
 });
 
 
+
 }
 
 
+
+
+
+
+// =================================================
+// CLOCK
+// =================================================
 
 
 function updateTime(){
 
 
-let now=new Date();
+let now = new Date();
 
 
-document.getElementById("currentTime").innerHTML=
 
-"Current Time: "+
+document.getElementById("currentTime").innerHTML =
+
+"Current Time: " +
+
 now.toLocaleString("en-US",{
 
-timeZone:"America/New_York"
+
+timeZone:"America/New_York",
+
+
+month:"numeric",
+
+
+day:"numeric",
+
+
+year:"numeric",
+
+
+hour:"numeric",
+
+
+minute:"2-digit",
+
+
+second:"2-digit"
+
 
 });
+
 
 
 }
 
 
-setInterval(updateTime,1000);
 
 updateTime();
 
+setInterval(updateTime,1000);
 
 
-start();
+
+
+
+
+// =================================================
+// START
+// =================================================
+
+
+startApp();
+
 
 
 </script>
 
 
 </body>
+
 
 </html>
