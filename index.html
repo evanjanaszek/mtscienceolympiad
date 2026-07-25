@@ -1,125 +1,433 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Team Experience Survey Portal</title>
 
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js"></script>
+<title>
+Team Engagement Survey
+</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-        }
 
-        button {
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px;
-        }
+<script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js"></script>
 
-        #profile {
-            display: none;
-        }
-    </style>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+<style>
+
+body{
+
+font-family:'Poppins',sans-serif;
+background:#f4f6f8;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+margin:0;
+
+}
+
+
+.card{
+
+background:white;
+width:420px;
+padding:35px;
+border-radius:15px;
+box-shadow:0 8px 25px rgba(0,0,0,.15);
+text-align:center;
+
+}
+
+
+.logo{
+
+width:140px;
+margin-bottom:15px;
+
+}
+
+
+button{
+
+width:100%;
+padding:13px;
+margin:8px 0;
+background:#1f3a5f;
+color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+
+}
+
+
+button:hover{
+
+background:#162b45;
+
+}
+
+
+.hidden{
+
+display:none;
+
+}
+
+
+.info{
+
+text-align:left;
+line-height:1.8;
+margin-top:20px;
+
+}
+
+
+.surveyIDDisplay{
+
+font-size:30px;
+font-weight:700;
+color:#1f3a5f;
+margin:20px;
+
+}
+
+
+.loading{
+
+color:#1f3a5f;
+font-weight:600;
+
+}
+
+
+.footerTime{
+
+margin-top:25px;
+font-size:13px;
+color:#777;
+
+}
+
+
+</style>
 
 </head>
 
+
 <body>
 
-<h1>Team Experience Survey</h1>
 
-<div id="login">
-    <p>Please log in to view your Survey ID.</p>
-    <button onclick="login()">Login</button>
+<div class="card">
+
+
+<div id="loading">
+
+<img class="logo" src="https://i.imgur.com/U80EXGS.png">
+
+<h2>
+Team Engagement Survey
+</h2>
+
+<p class="loading">
+Loading...
+</p>
+
+</div>
+
+
+
+
+<div id="loginPage" class="hidden">
+
+
+<img class="logo" src="https://i.imgur.com/U80EXGS.png">
+
+
+<h2>
+Manheim Township Science Olympiad
+</h2>
+
+
+<p>
+Please login to find your Survey ID.
+</p>
+
+
+<button onclick="login()">
+
+Login
+
+</button>
+
+
 </div>
 
 
-<div id="profile">
 
-    <h2>Welcome!</h2>
 
-    <p>Your Survey ID:</p>
 
-    <h2 id="surveyID"></h2>
+<div id="home" class="hidden">
 
-    <button onclick="takeSurvey()">
-        Take Survey
-    </button>
+
+<img class="logo" src="https://i.imgur.com/U80EXGS.png">
+
+
+<h2>
+Team Engagement Survey
+</h2>
+
+
+<h3 id="welcome"></h3>
+
+
+
+<div class="surveyIDDisplay" id="surveyID"></div>
+
+
+
+<div class="info">
+
+<b>Name:</b>
+<span id="name"></span>
+<br>
+
+
+<b>Grade:</b>
+<span id="grade"></span>
+<br>
+
+
+<b>Building:</b>
+<span id="building"></span>
+
 
 </div>
+
+
+
+<button onclick="takeSurvey()">
+
+Take Survey
+
+</button>
+
+
+<button onclick="logout()">
+
+Logout
+
+</button>
+
+
+</div>
+
+
+
+
+<div id="currentTime" class="footerTime"></div>
+
+
+
+</div>
+
+
 
 
 <script>
 
+
 let auth0Client;
 
 
-async function setupAuth0() {
 
-    auth0Client = await createAuth0Client({
-
-        domain: "mtscienceolympiad.us.auth0.com",
-
-        clientId: "hXhgBXIi9VbPGeJQ968X3EO31SWPfly1",
-
-        authorizationParams: {
-
-            redirect_uri: window.location.href
-
-        }
-
-    });
+async function start(){
 
 
-    if (window.location.search.includes("code=")) {
 
-        await auth0Client.handleRedirectCallback();
+auth0Client = await createAuth0Client({
 
-        window.history.replaceState({}, document.title, "/");
+domain:"YOUR_AUTH0_DOMAIN",
 
-    }
+clientId:"YOUR_CLIENT_ID",
 
+authorizationParams:{
 
-    if (await auth0Client.isAuthenticated()) {
-
-        document.getElementById("login").style.display = "none";
-
-        document.getElementById("profile").style.display = "block";
-
-
-        const user = await auth0Client.getUser();
-
-
-        document.getElementById("surveyID").innerHTML =
-            user.email;
-
-    }
+redirect_uri:window.location.href
 
 }
+
+});
+
+
+
+if(window.location.search.includes("code=")){
+
+
+await auth0Client.handleRedirectCallback();
+
+
+window.history.replaceState({},document.title,"/");
+
+
+}
+
+
+
+let loggedIn =
+await auth0Client.isAuthenticated();
+
+
+
+document.getElementById("loading").className="hidden";
+
+
+
+if(loggedIn){
+
+loadUser();
+
+}
+
+else{
+
+document.getElementById("loginPage").className="";
+
+}
+
+
+
+}
+
+
 
 
 async function login(){
 
-    await auth0Client.loginWithRedirect();
+
+await auth0Client.loginWithRedirect();
+
 
 }
+
+
+
+async function loadUser(){
+
+
+let user =
+await auth0Client.getUser();
+
+
+
+document.getElementById("home").className="";
+
+
+
+document.getElementById("welcome").innerHTML=
+"Welcome, "+user["https://mtscienceolympiad.com/firstName"]+"!";
+
+
+
+document.getElementById("surveyID").innerHTML=
+user["https://mtscienceolympiad.com/surveyID"];
+
+
+
+document.getElementById("name").innerHTML=
+user["https://mtscienceolympiad.com/firstName"]+
+" "+
+user["https://mtscienceolympiad.com/lastName"];
+
+
+
+document.getElementById("grade").innerHTML=
+user["https://mtscienceolympiad.com/grade"];
+
+
+
+document.getElementById("building").innerHTML=
+user["https://mtscienceolympiad.com/building"];
+
+
+
+}
+
 
 
 function takeSurvey(){
 
-    window.location.href =
-    "https://www.mtwp.net/";
+
+window.open(
+
+"YOUR_QUALTRICS_LINK?SurveyID="+
+document.getElementById("surveyID").innerHTML,
+
+"_blank"
+
+);
+
 
 }
 
 
-setupAuth0();
+
+
+async function logout(){
+
+
+await auth0Client.logout({
+
+logoutParams:{
+
+returnTo:window.location.href
+
+}
+
+});
+
+
+}
+
+
+
+
+function updateTime(){
+
+
+let now=new Date();
+
+
+document.getElementById("currentTime").innerHTML=
+
+"Current Time: "+
+now.toLocaleString("en-US",{
+
+timeZone:"America/New_York"
+
+});
+
+
+}
+
+
+setInterval(updateTime,1000);
+
+updateTime();
+
+
+
+start();
 
 
 </script>
 
 
 </body>
+
 </html>
