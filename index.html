@@ -8,14 +8,10 @@ Team Engagement Survey
 </title>
 
 
-<script src="https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.js" defer></script>
-
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 
 <style>
-
 
 body{
 
@@ -30,7 +26,6 @@ margin:0;
 }
 
 
-
 .card{
 
 background:white;
@@ -43,7 +38,6 @@ text-align:center;
 }
 
 
-
 .logo{
 
 width:140px;
@@ -52,13 +46,11 @@ margin-bottom:15px;
 }
 
 
-
 h2{
 
 color:#1f3a5f;
 
 }
-
 
 
 button{
@@ -78,7 +70,6 @@ cursor:pointer;
 }
 
 
-
 button:hover{
 
 background:#162b45;
@@ -86,13 +77,11 @@ background:#162b45;
 }
 
 
-
 .hidden{
 
 display:none;
 
 }
-
 
 
 .mainTitle{
@@ -103,7 +92,6 @@ color:#1f3a5f;
 }
 
 
-
 .info{
 
 text-align:left;
@@ -111,7 +99,6 @@ line-height:1.8;
 margin-top:20px;
 
 }
-
 
 
 .surveyIDDisplay{
@@ -124,16 +111,6 @@ margin:20px;
 }
 
 
-
-.loading{
-
-color:#1f3a5f;
-font-weight:600;
-
-}
-
-
-
 .footerTime{
 
 margin-top:25px;
@@ -141,7 +118,6 @@ font-size:13px;
 color:#777;
 
 }
-
 
 
 .error{
@@ -163,8 +139,6 @@ font-weight:bold;
 <div class="card">
 
 
-<!-- LOGIN PAGE -->
-
 
 <div id="loginPage">
 
@@ -173,20 +147,16 @@ font-weight:bold;
 
 
 <h2>
-
 Manheim Township Science Olympiad
-
 </h2>
 
 
 <p class="mainTitle">
-
 Team Engagement Survey
-
 </p>
 
 
-<button onclick="login()">
+<button id="loginButton">
 
 Login
 
@@ -199,9 +169,6 @@ Login
 
 
 
-<!-- USER PAGE -->
-
-
 <div id="home" class="hidden">
 
 
@@ -209,9 +176,7 @@ Login
 
 
 <h2>
-
 Team Engagement Survey
-
 </h2>
 
 
@@ -219,11 +184,9 @@ Team Engagement Survey
 
 
 
-<div>
-
+<p>
 Your Survey ID:
-
-</div>
+</p>
 
 
 <div class="surveyIDDisplay" id="surveyID">
@@ -236,21 +199,18 @@ Your Survey ID:
 
 
 <b>Name:</b>
-
 <span id="name"></span>
 
 <br>
 
 
 <b>Grade:</b>
-
 <span id="grade"></span>
 
 <br>
 
 
 <b>Building:</b>
-
 <span id="building"></span>
 
 
@@ -258,16 +218,14 @@ Your Survey ID:
 
 
 
-
-<button onclick="takeSurvey()">
+<button id="surveyButton">
 
 Take Survey
 
 </button>
 
 
-
-<button onclick="logout()">
+<button id="logoutButton">
 
 Logout
 
@@ -290,13 +248,17 @@ Logout
 
 
 
+<script type="module">
 
-<script>
+
+import createAuth0Client from 
+"https://cdn.auth0.com/js/auth0-spa-js/latest/auth0-spa-js.production.esm.js";
 
 
-// =====================================
+
+// ===============================
 // AUTH0 SETTINGS
-// =====================================
+// ===============================
 
 
 const AUTH0_DOMAIN = 
@@ -313,10 +275,10 @@ const QUALTRICS_LINK =
 
 
 
+const NAMESPACE =
+"https://evanjanaszek.github.io/mtscienceolympiad/";
 
-// =====================================
-// VARIABLES
-// =====================================
+
 
 
 let auth0Client;
@@ -325,9 +287,9 @@ let auth0Client;
 
 
 
-// =====================================
-// START
-// =====================================
+// ===============================
+// START APP
+// ===============================
 
 
 async function startApp(){
@@ -369,11 +331,12 @@ await auth0Client.handleRedirectCallback();
 window.history.replaceState(
 {},
 document.title,
-"/"
+window.location.pathname
 );
 
 
 }
+
 
 
 
@@ -394,7 +357,7 @@ loadUser();
 else{
 
 
-document.getElementById("loginPage").className="";
+document.getElementById("loginPage").classList.remove("hidden");
 
 
 }
@@ -402,58 +365,68 @@ document.getElementById("loginPage").className="";
 
 
 }
+
 
 catch(error){
 
 
 document.getElementById("errorMessage").innerHTML =
 
-"Error loading Auth0: " + error.message;
+"Auth0 Error: " + error.message;
 
 
 }
 
 
+
 }
 
 
 
 
 
-// =====================================
+// ===============================
 // LOGIN
-// =====================================
+// ===============================
 
 
-async function login(){
+document
+.getElementById("loginButton")
+.onclick = async function(){
 
 
 await auth0Client.loginWithRedirect();
 
 
-}
+};
 
 
 
 
 
-// =====================================
+
+// ===============================
 // LOAD USER
-// =====================================
+// ===============================
 
 
 async function loadUser(){
 
 
-let user = await auth0Client.getUser();
+const user = await auth0Client.getUser();
 
 
 
+document
+.getElementById("loginPage")
+.classList.add("hidden");
 
-document.getElementById("loginPage").className="hidden";
 
 
-document.getElementById("home").className="";
+document
+.getElementById("home")
+.classList.remove("hidden");
+
 
 
 
@@ -467,11 +440,7 @@ document.getElementById("welcome").innerHTML =
 
 document.getElementById("surveyID").innerHTML =
 
-user[
-"https://evanjanaszek.github.io/mtscienceolympiad/surveyID"
-]
-||
-"No Survey ID Found";
+user[NAMESPACE+"surveyID"] || "No Survey ID";
 
 
 
@@ -485,22 +454,14 @@ user.name || "";
 
 document.getElementById("grade").innerHTML =
 
-user[
-"https://evanjanaszek.github.io/mtscienceolympiad/grade"
-]
-||
-"";
+user[NAMESPACE+"grade"] || "";
 
 
 
 
 document.getElementById("building").innerHTML =
 
-user[
-"https://evanjanaszek.github.io/mtscienceolympiad/building"
-]
-||
-"";
+user[NAMESPACE+"building"] || "";
 
 
 
@@ -510,35 +471,37 @@ user[
 
 
 
-// =====================================
+// ===============================
 // SURVEY BUTTON
-// =====================================
+// ===============================
 
 
-function takeSurvey(){
+document
+.getElementById("surveyButton")
+.onclick=function(){
 
 
 window.open(
-
 QUALTRICS_LINK,
-
 "_blank"
-
 );
 
 
-}
+};
 
 
 
 
 
-// =====================================
+
+// ===============================
 // LOGOUT
-// =====================================
+// ===============================
 
 
-async function logout(){
+document
+.getElementById("logoutButton")
+.onclick=async function(){
 
 
 await auth0Client.logout({
@@ -552,28 +515,26 @@ returnTo:window.location.href
 });
 
 
-}
+};
 
 
 
 
 
-// =====================================
+
+// ===============================
 // CLOCK
-// =====================================
+// ===============================
 
 
 function updateTime(){
-
-
-let now = new Date();
 
 
 document.getElementById("currentTime").innerHTML =
 
 "Current Time: " +
 
-now.toLocaleString("en-US",{
+new Date().toLocaleString("en-US",{
 
 timeZone:"America/New_York",
 
@@ -595,18 +556,16 @@ second:"2-digit"
 }
 
 
-
 setInterval(updateTime,1000);
 
 updateTime();
 
 
 
-window.onload = function(){
 
 startApp();
 
-};
+
 
 </script>
 
